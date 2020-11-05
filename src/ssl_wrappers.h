@@ -24,6 +24,7 @@ using bio_ptr = c_wrapper<BIO>;
 using bio_method_ptr = c_wrapper<BIO_METHOD>;
 } // namespace utils
 
+// A convenience function to join the Basic I/O chains.
 utils::bio_ptr operator|(utils::bio_ptr lower, utils::bio_ptr upper) {
     BIO_push(upper.get(), lower.release());
     return upper;
