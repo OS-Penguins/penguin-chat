@@ -4,6 +4,7 @@
 #include <openssl/err.h>
 
 #include <cstring>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -114,5 +115,17 @@ string receive_http_message(BIO * bio) {
     while (body.size() < content_length) body += receive_some_data(bio);
 
     return headers + eol_http + body;
+}
+
+void send_http_response(BIO * bio, const std::string & body) {
+    {
+        std::stringstream response_builder{"HTTP/1.1 200 OK\r\n"};
+        response_builder << "Content-Length: " << body.size() << http_section_separator;
+        const auto response = response_builder.str();
+        BIO_write(bio, response.data(), response.size());
+    }
+
+    BIO_write(bio, body.data(), body.size());
+    BIO_flush(bio);
 }
 } // namespace utils

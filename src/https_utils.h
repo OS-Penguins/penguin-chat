@@ -9,5 +9,6 @@
 namespace utils {
 
 std::string receive_http_message(BIO *);
+void send_http_response(BIO*, const std::string &);
 }
 #endif

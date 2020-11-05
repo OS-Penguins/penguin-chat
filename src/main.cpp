@@ -70,7 +70,7 @@ int main() {
         const auto request = utils::receive_http_message(bio.get());
         // Process request
         current_requests.emplace_back([&bio, message = std::move(request)] {
-            send_http_response(bio.get(), process_message(message));
+            utils::send_http_response(bio.get(), process_message(message));
         });
     }
 
