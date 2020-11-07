@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall -Wextra -std=c++17 -O2 -lssl -lcrypto
+CFLAGS=-Wall -Wextra -std=c++17 -O2 -lssl -lcrypto -pthread
 
 .PHONY = all clean format
 
