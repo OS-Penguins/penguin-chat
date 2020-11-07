@@ -1,4 +1,5 @@
 
+#include "process_message.h"
 #include "https_utils.h"
 #include "ssl_wrappers.h"
 #include <openssl/err.h>
