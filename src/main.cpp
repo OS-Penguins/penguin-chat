@@ -4,10 +4,8 @@
 #include "ssl_wrappers.h"
 #include <openssl/err.h>
 
-#include <csignal>
 #include <cstdio>
 #include <thread>
-#include <unistd.h> //close
 #include <vector>
 
 using utils::wrap_c_ptr;
