@@ -1,13 +1,11 @@
 
-#include "process_message.h"
 #include "https_utils.h"
+#include "process_message.h"
 #include "ssl_wrappers.h"
 #include <openssl/err.h>
 
-#include <csignal>
 #include <cstdio>
 #include <thread>
-#include <unistd.h> //close
 #include <vector>
 
 using utils::wrap_c_ptr;
@@ -70,8 +68,8 @@ int main() {
         // NOTE: This is still synchronous.
         const auto request = utils::receive_http_message(bio.get());
         // Process request
-        current_requests.emplace_back([&bio, message = std::move(request)] {
-            utils::send_http_response(bio.get(), process_message(message));
+        current_requests.emplace_back([bio = bio.get(), message = std::move(request)] {
+            utils::send_http_response(bio, process_message(message));
         });
     }
 
