@@ -1,0 +1,22 @@
+# Formatting rules: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+IndentWidth: 4
+PointerAlignment: Middle
+ColumnLimit: 100
+
+AllowShortBlocksOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortLoopsOnASingleLine: true
+
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^".*\.h"'
+    Priority: 1
+  - Regex: '<[[:alnum:].]+>'
+    Priority: 2
+
+MaxEmptyLinesToKeep: 1
