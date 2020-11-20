@@ -12,7 +12,8 @@ if [[ ! -e login.txt ]]; then
 else
     read -p "username: " username
     read -sp "password: " password
-    if [[ ! $username == $(head -1 login.txt) && $password == $(head -2 login.txt) ]]; then
+    if [[ $username != $(head -1 login.txt) ||  $password != $(tail -1 login.txt) ]]; then
+        echo
         echo "invalid login try again"
         exit
     fi
@@ -24,12 +25,14 @@ until [[ $VARNAME == "q" ]] ; do
     read -r VARNAME
 
     if [[ $VARNAME =~ ^message\/ ]] ; then
-        USERMSG=$(echo "$VARNAME" | cut -d '/' -f2 )
-        if [[ -z "$USERMSG"  ]]; then
+        reciever=$(echo "$VARNAME" | cut -d '/' -f2 )
+        
+        if [[ -z "$reciever"  ]]; then
             echo "please specify user to message to"
         fi
-       
-        echo "$USERMSG"
+
+        message=$(echo "$VARNAME" | cut -d ' ' -f2)
+        curl -H "sender: $username" -H "sender-password: $password" -d "$message" -X POST LOCALHOST:3000/mailbox
         echo
     elif [[ $VARNAME == "mailbox/" ]] ; then
         echo "youve got mail!"
