@@ -24,12 +24,12 @@ until [[ $VARNAME == "q" ]] ; do
     read -r VARNAME
 
     if [[ $VARNAME =~ ^message\/ ]] ; then
-        USERMSG=$(echo $VARNAME | cut -d '/' -f2 )
+        USERMSG=$(echo "$VARNAME" | cut -d '/' -f2 )
         if [[ -z "$USERMSG"  ]]; then
             echo "please specify user to message to"
         fi
        
-        echo $USERMSG
+        echo "$USERMSG"
         echo
     elif [[ $VARNAME == "mailbox/" ]] ; then
         echo "youve got mail!"
