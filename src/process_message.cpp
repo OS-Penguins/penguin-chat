@@ -62,26 +62,27 @@ std::string process_message(const std::string & packet) {
     	get(username, password);
 	}
 	
-	if(action == "POST")
+    if(action == "POST")
 	{
 	unsigned delimiter1 = packet.find("message/");
 	unsigned delimiter2 = packet.find("/r/n");
 	std::string recipient = packet.substr (delimiter1+sender_length, (delimiter2-delimiter1)-recipient_length);
 	message_t message;
-    message.sender = username;
-    message.body = body;
+        message.sender = username;
+        message.body = body;
 	
 	if(username.empty()){
 		message.sender = "Anonymous";
 	}
 	
 	auto it = storage.find(recipient);
-    if (it != storage.end()) {
-        it->second.mailbox.push_back(message);
-    } else{
+        if (it != storage.end()) {
+        	it->second.mailbox.push_back(message);
+	} 
+	else {
 		user_data_t user;
-    	user.mailbox.push_back(message);
-    	storage.insert({recipient, user});
+    		user.mailbox.push_back(message);
+    		storage.insert({recipient, user});
 	}
 	
 	return "Message Sent";
