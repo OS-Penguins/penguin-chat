@@ -55,59 +55,42 @@ std::string process_message(const std::string & packet) {
         = request.substr(delimit_pass + pass_length, fourth_delimit - delimit_pass - pass_length);
 
     std::string body = request.substr(body_delimit);
-    
 
-    
-    if(action == "GET"){
-    	get(username, password);
-	}
-	
-	if(action == "POST")
-	{
-	unsigned delimiter1 = packet.find("message/");
-	unsigned delimiter2 = packet.find("/r/n");
-	std::string recipient = packet.substr (delimiter1+sender_length, (delimiter2-delimiter1)-recipient_length);
-	message_t message;
-    message.sender = username;
-    message.body = body;
-	
-	if(username.empty() && password.empty()){
-		message.sender = "Anonymous";
-	}
-	
-	if(username.empty() ^ password.empty()){
-		return "Message not posted";
-	}
-	
-	auto it = storage.find(message.sender);
-    if (it != storage.end() && password == it->second.password) {
-    	auto it = storage.find(recipient);
-    	if (it != storage.end()) {
-        	it->second.mailbox.push_back(message);
+    if (action == "GET") { get(username, password); }
+
+    if (action == "POST") {
+        unsigned delimiter1 = packet.find("message/");
+        unsigned delimiter2 = packet.find("/r/n");
+        std::string recipient = packet.substr(delimiter1 + sender_length,
+                                              (delimiter2 - delimiter1) - recipient_length);
+        message_t message;
+        message.sender = username;
+        message.body = body;
+
+        if (username.empty() && password.empty()) { message.sender = "Anonymous"; }
+
+        if (username.empty() ^ password.empty()) { return "Message not posted"; }
+
+        auto it = storage.find(message.sender);
+        if (it != storage.end() && password == it->second.password) {
+            auto it = storage.find(recipient);
+            if (it != storage.end()) {
+                it->second.mailbox.push_back(message);
+            } else {
+                return "Error: Recipient does not exist.";
+            }
+        } else {
+            return "Error: Incorrect username/password.";
         }
-        else {
-        	return "Error: Recipient does not exist.";
-		}
     }
-    else{
-    	return "Error: Incorrect username/password.";
-	}
-    } 
-	return "Message Posted";
+    return "Message Posted";
 
-	
-	
-	if (action == "OPTION"){
-		
-		std::cout<<"Available Options: "<<std::endl;
-		std::cout<<"POST /message/username"<<std::endl;
-		std::cout<<"GET /mailbox"<<std::endl;
-		
-	}
-	
-	return " ";
-	
-	
+    if (action == "OPTION") {
+
+        std::cout << "Available Options: " << std::endl;
+        std::cout << "POST /message/username" << std::endl;
+        std::cout << "GET /mailbox" << std::endl;
+    }
+
+    return " ";
 }
-
-
