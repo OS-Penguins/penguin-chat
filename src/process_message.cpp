@@ -58,35 +58,44 @@ std::string process_message(const std::string & packet) {
     
 
     
-    if(action == "GET") {
+    if(action == "GET"){
     	get(username, password);
 	}
 	
-    if(action == "POST") {
+	if(action == "POST")
+	{
 	unsigned delimiter1 = packet.find("message/");
 	unsigned delimiter2 = packet.find("/r/n");
 	std::string recipient = packet.substr (delimiter1+sender_length, (delimiter2-delimiter1)-recipient_length);
 	message_t message;
-        message.sender = username;
-        message.body = body;
+    message.sender = username;
+    message.body = body;
 	
-	if(username.empty()){
+	if(username.empty() && password.empty()){
 		message.sender = "Anonymous";
 	}
 	
-	auto it = storage.find(recipient);
-        if (it != storage.end()) {
-        	it->second.mailbox.push_back(message);
-	} 
-	else {
-		user_data_t user;
-    		user.mailbox.push_back(message);
-    		storage.insert({recipient, user});
+	if(username.empty() ^ password.empty()){
+		return "Message not posted";
 	}
 	
-	return "Message Sent";
-
+	auto it = storage.find(message.sender);
+    if (it != storage.end() && password == it->second.password) {
+    	auto it = storage.find(recipient);
+    	if (it != storage.end()) {
+        	it->second.mailbox.push_back(message);
+        }
+        else {
+        	return "Error: Recipient does not exist.";
+		}
+    }
+    else{
+    	return "Error: Incorrect username/password.";
 	}
+    } 
+	return "Message Posted";
+
+	
 	
 	if (action == "OPTION"){
 		
