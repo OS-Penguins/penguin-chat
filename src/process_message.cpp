@@ -17,11 +17,31 @@ struct user_data_t {
 
 static std::map<std::string, user_data_t> storage;
 
+std::string get(const std::string & user, const std::string & password) {
+
+    user_data_t returnvalue;
+
+    auto it = storage.find(user);
+    if (it != storage.end()) {
+        returnvalue = it->second;
+        if (password == returnvalue.password) {
+            for (int i = 0; i < returnvalue.mailbox.size(); ++i) {
+                std::cout << returnvalue.mailbox[i].sender << ": " << returnvalue.mailbox[i].body;
+            }
+            return "End of message.";
+        }
+    }
+
+    return "badinput";
+}
+
 std::string process_message(const std::string & packet) {
 
     static constexpr auto sender_length = 8;
+    static constexpr auto recipient_length = 9;
     static constexpr auto pass_length = 10;
     std::string request = packet;
+    std::string action = packet.substr(0, packet.find(" "));
 
     unsigned delimit_send = request.find("sender");
     unsigned second_delimit = request.find_first_of("\r\n", delimit_send);
@@ -35,37 +55,50 @@ std::string process_message(const std::string & packet) {
         = request.substr(delimit_pass + pass_length, fourth_delimit - delimit_pass - pass_length);
 
     std::string body = request.substr(body_delimit);
+    
 
-    message_t message;
+    
+    if(action == "GET"){
+    	get(username, password);
+	}
+	
+	if(action == "POST")
+	{
+	unsigned delimiter1 = packet.find("message/");
+	unsigned delimiter2 = packet.find("/r/n");
+	std::string recipient = packet.substr (delimiter1+sender_length, (delimiter2-delimiter1)-recipient_length);
+	message_t message;
     message.sender = username;
     message.body = body;
-    user_data_t user;
-    user.password = password;
-    user.mailbox.push_back(message);
-
-    auto it = storage.find(username);
+	
+	if(username.empty()){
+		message.sender = "Anonymous";
+	}
+	
+	auto it = storage.find(recipient);
     if (it != storage.end()) {
-        it->second = user;
-    } else
-        storage.insert({username, user});
+        it->second.mailbox.push_back(message);
+    } else{
+		user_data_t user;
+    	user.mailbox.push_back(message);
+    	storage.insert({recipient, user});
+	}
+	
+	return "Message Sent";
 
-    return message.body;
+	}
+	
+	if (action == "OPTION"){
+		
+		std::cout<<"Available Options: "<<std::endl;
+		std::cout<<"POST /message/username"<<std::endl;
+		std::cout<<"GET /mailbox"<<std::endl;
+		
+	}
+	
+	return " ";
+	
+	
 }
 
-std::string get(const std::string & user, const std::string & password) {
 
-    user_data_t returnvalue;
-
-    std::map<std::string, user_data_t>::iterator it = storage.find(user);
-    if (it != storage.end()) {
-        returnvalue = storage.at(user);
-        if (password == returnvalue.password) {
-            for (int i = 0; i < returnvalue.mailbox.size(); ++i) {
-                std::cout << returnvalue.mailbox[i].sender << ": " << returnvalue.mailbox[i].body;
-            }
-            return "End of message.";
-        }
-    }
-
-    return "badinput";
-}
