@@ -43,7 +43,7 @@ std::string process_message(const std::string & packet) {
     user.password = password;
     user.mailbox.push_back(message);
 
-    std::map<std::string, user_data_t>::iterator it = storage.find(username);
+    auto it = storage.find(username);
     if (it != storage.end()) {
         it->second = user;
     } else
