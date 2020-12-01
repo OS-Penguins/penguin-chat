@@ -47,7 +47,6 @@ until [[ $VARNAME == "q" ]] ; do
 
     #if it is a mailbox command 
     elif [[ $VARNAME == "mailbox/" ]] ; then
-        echo "youve got mail!"
 
         #curl command to recieve messages
         curl --cacert localhost.crt -H "sender: $username" -H "sender-password: $password" -X GET https://LOCALHOST:8080/mailbox

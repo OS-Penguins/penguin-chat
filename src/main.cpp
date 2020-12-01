@@ -6,8 +6,8 @@
 
 #include <cstdio>
 #include <iostream>
+#include <queue>
 #include <thread>
-#include <vector>
 
 using utils::wrap_c_ptr;
 
@@ -35,6 +35,39 @@ utils::bio_ptr accept_new_tcp_connection(BIO * accept_bio) {
 
 static constexpr const auto * port = "8080";
 
+static pthread_mutex_t * lockarray;
+
+void lock_callback(int mode, int type, char * file, int line) {
+    (void)file;
+    (void)line;
+    if (mode & CRYPTO_LOCK) {
+        pthread_mutex_lock(&(lockarray[type]));
+    } else {
+        pthread_mutex_unlock(&(lockarray[type]));
+    }
+}
+
+static void init_locks(void) {
+    int i;
+
+    lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
+    for (i = 0; i < CRYPTO_num_locks(); i++) { pthread_mutex_init(&(lockarray[i]), NULL); }
+
+    CRYPTO_set_id_callback((unsigned long (*)())thread_id);
+    CRYPTO_set_locking_callback(lock_callback);
+}
+
+static void kill_locks(void) {
+    int i;
+
+    CRYPTO_set_locking_callback(NULL);
+    for (i = 0; i < CRYPTO_num_locks(); i++) pthread_mutex_destroy(&(lockarray[i]));
+
+    OPENSSL_free(lockarray);
+}
+
+static constexpr auto num_simultaneous_connections = 2;
+
 int main() {
     auto ctx = init_ssl_context();
 
@@ -59,25 +92,43 @@ int main() {
     } else
         printf("listening on port %s\n", port);
 
-    std::vector<std::thread> current_requests{};
+    init_locks();
 
-    // Read in a connection.
-    auto bio = accept_new_tcp_connection(accept_bio.get());
-    while (bio != nullptr) {
-        bio = std::move(bio) | wrap_c_ptr(BIO_new_ssl(ctx.get(), 0));
-        // Read incoming message.
-        // NOTE: This is still synchronous.
+    std::queue<std::thread> current_requests{};
 
-        // Process request
-        current_requests.emplace_back([bio = bio.get()] {
-            std::cout << "reading new message" << std::endl;
-            const auto message = utils::receive_http_message(bio);
-            utils::send_http_response(bio, process_message(message));
-        });
+    while (true) {
+        while (current_requests.size() < num_simultaneous_connections) {
+            current_requests.emplace([&accept_bio, &ctx] {
+                // Read in a connection.
+                // Read incoming message.
+                // NOTE: This is still synchronous.
+
+                auto bio = accept_new_tcp_connection(accept_bio.get());
+                while (bio != nullptr) {
+                    bio = std::move(bio) | wrap_c_ptr(BIO_new_ssl(ctx.get(), 0));
+                    // Process request
+                    std::cout << "reading new message" << std::endl;
+                    const auto message = utils::receive_http_message(bio.get());
+                    if (message.empty()) return;
+                    std::cout << "processing message" << std::endl;
+                    const auto responce = process_message(message);
+                    std::cout << "Responding with " << responce << std::endl;
+                    utils::send_http_response(bio.get(), responce);
+                }
+            });
+        }
+
+        try {
+            while (current_requests.front().joinable()) {
+                current_requests.front().join();
+                current_requests.pop();
+            }
+        } catch (...) {}
+
+        std::this_thread::yield();
     }
 
-    // Clean up all requests.
-    for (auto & request : current_requests) request.join();
+    kill_locks();
 
     puts("\nClean exit.");
 }
