@@ -3,25 +3,11 @@
 echo "Welcome to our penguin chat!"
 echo "----------------------------"
 
-#if new user
-if [[ ! -e login.txt ]]; then
-    echo "Create a user login"
-    read -p "username: " username
-    read -sp "password: " password
-    echo "$username" >> login.txt
-    echo "$password" >> login.txt
-    echo
-else
-#if old user verify
-    read -p "username: " username
-    read -sp "password: " password
-    if [[ $username != $(head -1 login.txt) ||  $password != $(tail -1 login.txt) ]]; then
-        echo
-        echo "invalid login try again"
-        exit
-    fi
-    echo
-fi
+#login
+read -p "username: " username
+read -sp "password: " password
+echo
+
 
 #do-while loop
 until [[ $VARNAME == "q" ]] ; do  
@@ -39,17 +25,17 @@ until [[ $VARNAME == "q" ]] ; do
         fi
         
         #message body to be sent
-        message=$(echo "$VARNAME" | cut -d ' ' -f2)
+        message=$(echo "$VARNAME" | cut -d ' ' -f2-)
 
         #curl command invoked to send message
-        curl --cacert localhost.crt -H "sender: $username" -H "sender-password: $password" -d "$message" -X POST https://LOCALHOST:8080/message/$reciever
+        curl --cacert localhost.crt -H "sender: $username" -H "sender-password: $password" -d "$message" -X POST "https://LOCALHOST:8080/message/$reciever"
         echo
 
     #if it is a mailbox command 
     elif [[ $VARNAME == "mailbox/" ]] ; then
 
         #curl command to recieve messages
-        curl --cacert localhost.crt -H "sender: $username" -H "sender-password: $password" -X GET https://LOCALHOST:8080/mailbox
+        curl --cacert localhost.crt -H "sender: $username" -H "sender-password: $password" -X GET "https://LOCALHOST:8080/mailbox"
         echo
 
     #if it is the options command 
@@ -61,6 +47,8 @@ until [[ $VARNAME == "q" ]] ; do
         echo "/ - options"
         echo "q - quit"
         echo
+    elif [[ $VARNAME == "q" || $VARNAME == "quit" ]]; then 
+        exit 0
     else 
         echo "invalid input"
         echo
