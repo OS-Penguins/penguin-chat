@@ -85,8 +85,8 @@ std::string process_message(const std::string & packet) {
         } else {
             return "Error: Incorrect username/password.";
         }
-    }
     return "Message Posted";
+    }
 
     if (action == "OPTION") {
 
