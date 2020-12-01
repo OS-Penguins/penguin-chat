@@ -63,7 +63,6 @@ pair<string, bool> receive_some_data(BIO * bio) {
     while (true) {
         std::lock_guard lock{mut};
         const auto len = BIO_read(bio, buffer, sizeof(buffer));
-        std::cout << len << std::endl;
         if (len == -2) print_errors_and_throw("error in BIO_read");
         else if (len > 0)
             return {string(buffer, len), false};
@@ -106,18 +105,13 @@ string receive_http_message(BIO * bio) {
             auto [data, ended] = receive_some_data(bio);
             if (ended) return "";
             headers += data;
-            std::cout << "end of headers at: ";
             end_of_thingy = headers.find(http_section_separator);
-            std::cout << end_of_thingy << std::endl;
-            std::cout << "is endpos: " << std::boolalpha << (end_of_thingy == std::string::npos)
-                      << std::endl;
         } while (end_of_thingy == std::string::npos and not headers.empty());
     } catch (std::runtime_error & e) {
-        std::cout << "Error occured: " << e.what() << std::endl;
+        // std::cout << "Error occured: " << e.what() << std::endl;
         return "";
     }
 
-    std::cout << "headers: " << headers << std::endl;
     // Take all after the section separator and make that the body.
     auto body = headers.substr(end_of_thingy);
 
@@ -136,8 +130,6 @@ string receive_http_message(BIO * bio) {
                 header_name == "Content-Length")
                 content_length = std::stoul(colon + 1);
     }
-    std::cout << "content length: " << content_length << std::endl;
-    std::cout << "body size: " << body.size() << std::endl;
     while (body.size() < content_length) body += std::get<0>(receive_some_data(bio));
 
     return headers + eol_http + body;

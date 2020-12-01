@@ -107,13 +107,11 @@ int main() {
                 while (bio != nullptr) {
                     bio = std::move(bio) | wrap_c_ptr(BIO_new_ssl(ctx.get(), 0));
                     // Process request
-                    std::cout << "reading new message" << std::endl;
                     const auto message = utils::receive_http_message(bio.get());
                     if (message.empty()) return;
-                    std::cout << "processing message" << std::endl;
                     const auto responce = process_message(message);
-                    std::cout << "Responding with " << responce << std::endl;
                     utils::send_http_response(bio.get(), responce);
+                    std::cout << std::endl;
                 }
             });
         }

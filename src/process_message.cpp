@@ -57,16 +57,10 @@ std::string process_message(const std::string & packet) {
     unsigned fourth_delimit = request.find("\r\n", delimit_pass);
     unsigned body_delimit = request.find("\r\n\r\n");
 
-    std::cout << "Request\n" << request << std::endl;
-
     std::string username = request.substr(delimit_send + sender_length,
                                           second_delimit - delimit_send - sender_length);
     std::string password
         = request.substr(delimit_pass + pass_length, fourth_delimit - (delimit_pass + pass_length));
-
-    std::cout << "username: " << username << " | password: " << password << std::endl;
-    for (char c : password) std::cout << std::hex << std::setw(2) << (int)c << ' ';
-    std::cout << std::dec << std::endl;
 
     if (action == "GET") { return get(username, password); }
 
