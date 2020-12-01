@@ -4,6 +4,7 @@
 #include <openssl/err.h>
 
 #include <cstring>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -55,8 +56,9 @@ namespace {
 
 string receive_some_data(BIO * bio) {
     char buffer[1024];
-    if (const auto len = BIO_read(bio, buffer, sizeof(buffer)); len < 0)
-        print_errors_and_throw("error in BIO_read");
+    const auto len = BIO_read(bio, buffer, sizeof(buffer));
+    std::cout << len << std::endl;
+    if (len == -2) print_errors_and_throw("error in BIO_read");
     else if (len > 0)
         return string(buffer, len);
     else if (BIO_should_retry(bio))
@@ -87,12 +89,20 @@ string receive_http_message(BIO * bio) {
 
     // Collect all headers at the top of an HTTP message.
     string headers{};
+    size_t end_of_thingy = 0;
     char * end_of_headers = nullptr;
     do {
         headers += receive_some_data(bio);
         end_of_headers = strstr(headers.data(), http_section_separator);
-    } while (end_of_headers == nullptr);
+        std::cout << "end of headers at: ";
+        end_of_thingy = headers.find(http_section_separator);
+        std::cout << end_of_thingy << std::endl;
+        std::cout << "is endpos: " << std::boolalpha << (end_of_thingy == std::string::npos)
+                  << std::endl;
+    } while (end_of_thingy == std::string::npos);
 
+    std::cout << headers << std::endl;
+    end_of_headers = &headers[end_of_thingy];
     // Take all after the section separator and make that the body.
     auto body
         = std::string(end_of_headers + strlen(http_section_separator), &headers[headers.size()]);
@@ -112,7 +122,8 @@ string receive_http_message(BIO * bio) {
                 header_name == "Content-Length")
                 content_length = std::stoul(colon + 1);
     }
-
+    std::cout << "content length: " << content_length << std::endl;
+    std::cout << "body size: " << body.size() << std::endl;
     while (body.size() < content_length) body += receive_some_data(bio);
 
     return headers + eol_http + body;

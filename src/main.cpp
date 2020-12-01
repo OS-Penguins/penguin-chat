@@ -5,6 +5,7 @@
 #include <openssl/err.h>
 
 #include <cstdio>
+#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -66,9 +67,11 @@ int main() {
         bio = std::move(bio) | wrap_c_ptr(BIO_new_ssl(ctx.get(), 0));
         // Read incoming message.
         // NOTE: This is still synchronous.
-        const auto request = utils::receive_http_message(bio.get());
+
         // Process request
-        current_requests.emplace_back([bio = bio.get(), message = std::move(request)] {
+        current_requests.emplace_back([bio = bio.get()] {
+            std::cout << "reading new message" << std::endl;
+            const auto message = utils::receive_http_message(bio);
             utils::send_http_response(bio, process_message(message));
         });
     }

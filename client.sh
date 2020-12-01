@@ -30,7 +30,7 @@ until [[ $VARNAME == "q" ]] ; do
     
     #if it begins with message 
     if [[ $VARNAME =~ ^message\/ ]] ; then
-        reciever=$(echo "$VARNAME" | cut -d '/' -f2 )
+        reciever=$(echo "$VARNAME" | cut -d '/' -f2 | cut -d ' ' -f1 )
         
         #if no user is specified
         if [[ -z "$reciever"  ]]; then
@@ -42,7 +42,7 @@ until [[ $VARNAME == "q" ]] ; do
         message=$(echo "$VARNAME" | cut -d ' ' -f2)
 
         #curl command invoked to send message
-        curl -H "sender: $username" -H "sender-password: $password" -d "$message" -X POST LOCALHOST:8080/message/$reciever
+        curl --cacert localhost.crt -H "sender: $username" -H "sender-password: $password" -d "$message" -X POST https://LOCALHOST:8080/message/$reciever
         echo
 
     #if it is a mailbox command 
@@ -50,7 +50,7 @@ until [[ $VARNAME == "q" ]] ; do
         echo "youve got mail!"
 
         #curl command to recieve messages
-        curl -H "sender: $username" -H "sender-password: $password" -X GET LOCALHOST:8080/mailbox
+        curl --cacert localhost.crt -H "sender: $username" -H "sender-password: $password" -X GET https://LOCALHOST:8080/mailbox
         echo
 
     #if it is the options command 
