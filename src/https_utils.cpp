@@ -74,6 +74,7 @@ std::vector<std::string> split_headers(const std::string & text) {
     while (end != nullptr) {
         lines.emplace_back(start, end);
         start = end + 2;
+        end = strstr(start, eol_http);
     }
     return lines;
 }
