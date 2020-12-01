@@ -8,6 +8,11 @@
 struct message_t {
     std::string sender;
     std::string body;
+
+    message_t(std::string send, std::string bod) {
+        sender = send;
+        body = bod;
+    }
 };
 
 struct user_data_t {
@@ -63,9 +68,7 @@ std::string process_message(const std::string & packet) {
         unsigned delimiter2 = packet.find("/r/n");
         std::string recipient = packet.substr(delimiter1 + sender_length,
                                               (delimiter2 - delimiter1) - recipient_length);
-        message_t message;
-        message.sender = username;
-        message.body = body;
+        message_t message(username, body);
 
         if (username.empty() && password.empty()) { message.sender = "Anonymous"; }
 
@@ -87,9 +90,7 @@ std::string process_message(const std::string & packet) {
 
     if (action == "OPTION") {
 
-        std::cout << "Available Options: " << std::endl;
-        std::cout << "POST /message/username" << std::endl;
-        std::cout << "GET /mailbox" << std::endl;
+        return "Available Options: \nPOST /message/username\n GET /mailbox\n";
     }
 
     return " ";
