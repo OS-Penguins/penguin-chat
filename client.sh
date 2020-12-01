@@ -42,7 +42,7 @@ until [[ $VARNAME == "q" ]] ; do
         message=$(echo "$VARNAME" | cut -d ' ' -f2)
 
         #curl command invoked to send message
-        curl -H "sender: $username" -H "sender-password: $password" -d "$message" -X POST LOCALHOST:3000/message/$reciever
+        curl -H "sender: $username" -H "sender-password: $password" -d "$message" -X POST LOCALHOST:8080/message/$reciever
         echo
 
     #if it is a mailbox command 
@@ -50,7 +50,7 @@ until [[ $VARNAME == "q" ]] ; do
         echo "youve got mail!"
 
         #curl command to recieve messages
-        curl -H "sender: $username" -H "sender-password: $password" -X GET LOCALHOST:3000/mailbox
+        curl -H "sender: $username" -H "sender-password: $password" -X GET LOCALHOST:8080/mailbox
         echo
 
     #if it is the options command 
