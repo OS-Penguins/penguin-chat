@@ -1,7 +1,9 @@
 #include "process_message.h"
 
+#include <iomanip>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -24,20 +26,21 @@ static std::map<std::string, user_data_t> storage;
 
 std::string get(const std::string & user, const std::string & password) {
 
-    user_data_t returnvalue;
-
     auto it = storage.find(user);
     if (it != storage.end()) {
-        returnvalue = it->second;
+        auto returnvalue = it->second;
         if (password == returnvalue.password) {
-            for (int i = 0; i < returnvalue.mailbox.size(); ++i) {
-                std::cout << returnvalue.mailbox[i].sender << ": " << returnvalue.mailbox[i].body;
+            std::stringstream result;
+            for (const auto & mail : returnvalue.mailbox) {
+                result << mail.sender << ": " << mail.body << '\n';
             }
-            return "End of message.";
+            return result.str();
         }
     }
 
-    return "badinput";
+    storage[user] = {password, {}};
+    std::cout << "user _" << user << "_ has a mailbox." << std::endl;
+    return "no mail found";
 }
 
 std::string process_message(const std::string & packet) {
@@ -49,25 +52,25 @@ std::string process_message(const std::string & packet) {
     std::string action = packet.substr(0, packet.find(" "));
 
     unsigned delimit_send = request.find("sender");
-    unsigned second_delimit = request.find_first_of("\r\n", delimit_send);
+    unsigned second_delimit = request.find("\r\n", delimit_send);
     unsigned delimit_pass = request.find("password");
-    unsigned fourth_delimit = request.find_first_of("\r\n", delimit_pass);
+    unsigned fourth_delimit = request.find("\r\n", delimit_pass);
     unsigned body_delimit = request.find("\r\n\r\n");
 
     std::string username = request.substr(delimit_send + sender_length,
                                           second_delimit - delimit_send - sender_length);
     std::string password
-        = request.substr(delimit_pass + pass_length, fourth_delimit - delimit_pass - pass_length);
+        = request.substr(delimit_pass + pass_length, fourth_delimit - (delimit_pass + pass_length));
 
-    std::string body = request.substr(body_delimit);
+    if (action == "GET") { return get(username, password); }
 
-    if (action == "GET") { get(username, password); }
+    std::string body = request.substr(body_delimit + 4);
 
     if (action == "POST") {
         unsigned delimiter1 = packet.find("message/");
-        unsigned delimiter2 = packet.find("/r/n");
+        unsigned delimiter2 = packet.find(' ', delimiter1);
         std::string recipient = packet.substr(delimiter1 + sender_length,
-                                              (delimiter2 - delimiter1) - recipient_length);
+                                              delimiter2 + 1 - (delimiter1 + recipient_length));
         message_t message(username, body);
 
         if (username.empty() && password.empty()) { message.sender = "Anonymous"; }
@@ -83,9 +86,10 @@ std::string process_message(const std::string & packet) {
                 return "Error: Recipient does not exist.";
             }
         } else {
+            std::cout << "sender _" << message.sender << "_\n";
             return "Error: Incorrect username/password.";
         }
-    return "Message Posted";
+        return "Message Posted";
     }
 
     if (action == "OPTION") {

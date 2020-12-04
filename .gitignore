@@ -32,4 +32,4 @@
 *.app
 
 # Login File
-login.txt
+.vscode

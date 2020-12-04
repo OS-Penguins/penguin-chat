@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall -Wextra -std=c++17 -O2 -lssl -lcrypto -pthread
+CFLAGS=-Wall -Wextra -std=c++17 -O2 -lssl -lcrypto -pthread -L/usr/lib -I /usr/include -g
 
 .PHONY = all clean format
 
@@ -9,7 +9,7 @@ OBJS := $(SRCS:src/%.cpp=build/%.o)
 OUTPUT=penguin-chat
 
 all: ${OBJS}
-	${CC} ${CFLAGS} $^ -o ${OUTPUT}
+	${CC} $^ -o ${OUTPUT}  ${CFLAGS} 
 
 build/%.o: src/%.cpp
 	mkdir -p build
